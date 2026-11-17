@@ -1,0 +1,13 @@
+[Unit]
+Description=eDBG MCP bridge restore (device daemon + adb forward)
+After=network.target
+
+[Service]
+Type=oneshot
+# Give the phone a moment to show up after boot; the script exits 0 with a
+# [skip] note when no device is attached, so the unit stays green either way.
+Environment=EDBG_WAIT=10
+ExecStart=%h/github/edbg-mcp/restore.sh
+
+[Install]
+WantedBy=default.target
