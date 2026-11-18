@@ -29,7 +29,7 @@ back in a few seconds, so most "it's broken" moments are one command:
 | Path | What it is |
 |---|---|
 | `restore.sh` | Idempotent bring-up: pushes the binary if the device lost it, starts the daemon, sets the forward, verifies the endpoint |
-| `bin/eDBG_v2.3.0` | Device binary (aarch64), the unmodified upstream v2.3.0 release build |
+| `bin/eDBG_v2.3.0` | Device binary (aarch64), **rebuilt from the v2.3.0 tag** — the official release zip pairs its embedded `ebpf_module.o` with a stale `min_core_btf` and fails to load probes on kernels without `CONFIG_DEBUG_INFO_BTF` (see troubleshooting) |
 | `bin/edbg-mcp-install_linux_arm64` | Host-side installer that writes MCP config into other clients (`--install`); not needed for OpenCode |
 | `docs/README_mcp_en.md` | Upstream MCP documentation (runtime behavior, installer flags) |
 | `systemd/edbg-mcp-restore.service` | Optional: re-runs `restore.sh` at login |
@@ -56,6 +56,9 @@ Day-to-day use, tool behavior, and troubleshooting are in [usage.md](usage.md).
 
 ## Upstream
 
-eDBG is by ShinoLeah, MIT-licensed (`LICENSE`). The binaries here are the
-unmodified v2.3.0 release builds and the doc under `docs/` is upstream's —
-this repo only adds the restore script, the systemd unit, and documentation.
+eDBG is by ShinoLeah, MIT-licensed (`LICENSE`). The doc under `docs/` is
+upstream's. The device binary in `bin/` is rebuilt from the v2.3.0 tag —
+the upstream release zip ships a broken eBPF/BTF pairing for kernels
+without `CONFIG_DEBUG_INFO_BTF` (details in the troubleshooting table of
+`usage.md`). This repo adds the restore script, the systemd unit, the
+rebuilt binary, and documentation.

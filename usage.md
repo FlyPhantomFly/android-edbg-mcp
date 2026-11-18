@@ -112,7 +112,8 @@ client's native format (JSON or TOML; Codex lands in `~/.codex/config.toml`):
 | restore says `[skip] no adb device` | plug the phone in; check `adb devices` for `unauthorized` |
 | daemon won't start | read the device log shown by the script; usually a kernel without eBPF/uprobes, or SELinux state changed after an update |
 | port already in use | a stale eDBG on the device: `adb shell "su -c 'pkill eDBG'"`, then re-run restore |
-| device binary is outdated | restore compares md5 against `bin/eDBG_v2.3.0` and re-pushes on mismatch — drop the new release build into `bin/` and re-run |
+| probes fail to load: `invalid func unknown#195896080` | the official v2.3.0 release zip ships a stale `ebpf_module.o`/`min_core_btf` pairing — `bin/` carries a rebuilt binary with a correctly paired one. restore.sh only pushes when the device file is missing; use `EDBG_FORCE_PUSH=1 ./restore.sh` to overwrite a device copy, or `EDBG_BIN=/path/to/binary ./restore.sh` to deploy a different build |
+| device binary is outdated | drop the new build into `bin/` (keep the same filename), then `EDBG_FORCE_PUSH=1 ./restore.sh` |
 
 ## Automation
 
