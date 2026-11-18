@@ -4,7 +4,7 @@
 # The MCP HTTP server runs ON the Android device (root); the host only sees it
 # through an adb port-forward. This script fixes both halves:
 #   1. push bin/eDBG_v2.3.0 to the device if /data/local/tmp/eDBG is missing or stale
-#   2. start `eDBG --mcp` on the device if it is not already running
+#   2. start `eDBG --mcp --prefer uprobe` on the device if it is not already running
 #   3. adb forward tcp:19810 -> tcp:19810
 #   4. verify the endpoint with a JSON-RPC initialize (POST — a plain GET opens
 #      a long-lived SSE stream that never completes)
@@ -67,8 +67,14 @@ fi
 if "${ADB}" shell "su -c 'ps -A'" 2>/dev/null | grep -q "[e]DBG"; then
   echo "[ok] eDBG daemon already running on device (${SERIAL})"
 else
-  echo "[..] starting eDBG --mcp on device (root, detached)"
-  "${ADB}" shell "su -c 'nohup ${DEVICE_BIN} --mcp </dev/null >/data/local/tmp/edbg_mcp.log 2>&1 &'"
+  echo "[..] starting eDBG --mcp --prefer uprobe on device (root, detached)"
+  # --prefer uprobe is REQUIRED on this ROM: without it the daemon defaults to
+  # PREFER_PERF and arms a kernel-wide kprobe on perf_output_sample whose
+  # bpf_send_signal(19) SIGSTOPs ANY process generating perf events (ColorOS
+  # perf framework profiles shell activity) — every adb shell freezes at exit.
+  # Upstream bug: --mcp does NOT actually force uprobe preference despite the
+  # README claiming it does (EnableMCPMode only suppresses output).
+  "${ADB}" shell "su -c 'nohup ${DEVICE_BIN} --mcp --prefer uprobe </dev/null >/data/local/tmp/edbg_mcp.log 2>&1 &'"
   sleep 3
   if "${ADB}" shell "su -c 'ps -A'" 2>/dev/null | grep -q "[e]DBG"; then
     echo "[ok] eDBG daemon started on device"

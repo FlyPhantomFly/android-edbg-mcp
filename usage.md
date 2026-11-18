@@ -110,6 +110,7 @@ client's native format (JSON or TOML; Codex lands in `~/.codex/config.toml`):
 |---|---|
 | `ECONNREFUSED` in the client | `./restore.sh` — covers essentially every case |
 | restore says `[skip] no adb device` | plug the phone in; check `adb devices` for `unauthorized` |
+| adb shell freezes at exit (output flows, stream never closes) | the eDBG probe kprobe on `perf_output_sample` SIGSTOPs any process generating perf events (ColorOS perf framework profiles shell activity). `./restore.sh` restarts the daemon with `--prefer uprobe` (required — `--mcp` does NOT force uprobe despite upstream docs, and the unfiltered `bpf_send_signal(19)` in the eBPF program freezes unrelated processes); resume frozen processes with the repo's `unfreeze.sh` (push it: `adb push unfreeze.sh /data/local/tmp/`, then `sh /data/local/tmp/unfreeze.sh`) |
 | daemon won't start | read the device log shown by the script; usually a kernel without eBPF/uprobes, or SELinux state changed after an update |
 | port already in use | a stale eDBG on the device: `adb shell "su -c 'pkill eDBG'"`, then re-run restore |
 | probes fail to load: `invalid func unknown#195896080` | the official v2.3.0 release zip ships a stale `ebpf_module.o`/`min_core_btf` pairing — `bin/` carries a rebuilt binary with a correctly paired one. restore.sh only pushes when the device file is missing; use `EDBG_FORCE_PUSH=1 ./restore.sh` to overwrite a device copy, or `EDBG_BIN=/path/to/binary ./restore.sh` to deploy a different build |
