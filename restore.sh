@@ -41,14 +41,26 @@ done
 SERIAL="$("${ADB}" get-serialno 2>/dev/null || echo '?')"
 
 # 1) device-side binary -------------------------------------------------------
+# EDBG_BIN overrides the local binary to deploy; EDBG_FORCE_PUSH=1 overwrites
+# a differing device binary (md5 mismatch alone does NOT clobber manual deploys).
+local_bin="${EDBG_BIN:-${REPO_DIR}/bin/eDBG_v2.3.0}"
 remote_md5="$("${ADB}" shell "su -c 'md5sum ${DEVICE_BIN}'" 2>/dev/null | awk '{print $1}' || true)"
-local_md5="$(md5sum "${LOCAL_BIN}" | awk '{print $1}')"
-if [ "${remote_md5}" != "${local_md5}" ]; then
-  echo "[..] pushing eDBG binary to ${DEVICE_BIN} (missing or stale on device)"
-  "${ADB}" push "${LOCAL_BIN}" "${DEVICE_BIN}" >/dev/null
+local_md5="$(md5sum "${local_bin}" 2>/dev/null | awk '{print $1}')"
+if [ -z "${remote_md5}" ]; then
+  echo "[..] pushing eDBG binary to ${DEVICE_BIN} (missing on device)"
+  "${ADB}" push "${local_bin}" "${DEVICE_BIN}" >/dev/null
   "${ADB}" shell "su -c 'chmod 755 ${DEVICE_BIN}'"
+elif [ "${remote_md5}" != "${local_md5}" ]; then
+  if [ "${EDBG_FORCE_PUSH:-0}" = "1" ]; then
+    echo "[..] pushing eDBG binary (EDBG_FORCE_PUSH=1)"
+    "${ADB}" push "${local_bin}" "${DEVICE_BIN}" >/dev/null
+    "${ADB}" shell "su -c 'chmod 755 ${DEVICE_BIN}'"
+  else
+    echo "[warn] device eDBG binary differs from ${local_bin##*/} — keeping device binary"
+    echo "       (set EDBG_FORCE_PUSH=1 to overwrite)"
+  fi
 else
-  echo "[ok] eDBG binary on device matches bin/eDBG_v2.3.0"
+  echo "[ok] eDBG binary on device matches ${local_bin##*/}"
 fi
 
 # 2) device-side daemon -------------------------------------------------------
