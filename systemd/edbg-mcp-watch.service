@@ -1,0 +1,8 @@
+[Unit]
+Description=eDBG MCP bridge watchdog (probe port, restore when down)
+# restore.sh exits 0 with a [skip] note when no device is attached, so the
+# unit stays green when the phone is unplugged.
+
+[Service]
+Type=oneshot
+ExecStart=%h/github/android-edbg-mcp/edbg-bridge-check.sh

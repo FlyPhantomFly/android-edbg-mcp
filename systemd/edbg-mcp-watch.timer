@@ -1,0 +1,13 @@
+[Unit]
+Description=Probe the eDBG MCP bridge every 2 minutes and repair it when down
+
+[Timer]
+# adb port-forwards do not survive adb-server restarts or device replugs;
+# this catches the drop within 2 minutes instead of at the next session.
+OnBootSec=90
+OnUnitActiveSec=2min
+AccuracySec=15s
+Unit=edbg-mcp-watch.service
+
+[Install]
+WantedBy=timers.target

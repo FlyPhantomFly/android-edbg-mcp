@@ -29,10 +29,12 @@ back in a few seconds, so most "it's broken" moments are one command:
 | Path | What it is |
 |---|---|
 | `restore.sh` | Idempotent bring-up: pushes the binary if the device lost it, starts the daemon, sets the forward, verifies the endpoint |
+| `edbg-bridge-check.sh` | Watchdog probe: silent exit while the endpoint answers, runs `restore.sh` only when it is down |
 | `bin/eDBG_v2.3.0` | Device binary (aarch64), **rebuilt from the v2.3.0 tag** — the official release zip pairs its embedded `ebpf_module.o` with a stale `min_core_btf` and fails to load probes on kernels without `CONFIG_DEBUG_INFO_BTF` (see troubleshooting) |
 | `bin/edbg-mcp-install_linux_arm64` | Host-side installer that writes MCP config into other clients (`--install`); not needed for OpenCode |
 | `docs/README_mcp_en.md` | Upstream MCP documentation (runtime behavior, installer flags) |
 | `systemd/edbg-mcp-restore.service` | Optional: re-runs `restore.sh` at login |
+| `systemd/edbg-mcp-watch.{service,timer}` | Optional: probes the endpoint every 2 minutes and repairs the bridge automatically — covers adb-server restarts and device replugs, which silently drop the port forward |
 
 ## Quick start
 
